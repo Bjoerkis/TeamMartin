@@ -51,7 +51,7 @@ public class Menu {
         System.out.println("              Delete               ");
         System.out.println("=================================");
         System.out.println("1. Delete game");
-        //System.out.println("2. Delete developer");
+        System.out.println("2. Remove game from developer");
         System.out.println("\n0. Return to main menu");
         System.out.println("=================================");
         int choice  = scanInt();
@@ -59,9 +59,9 @@ public class Menu {
             case 1:
                 Manager.deleteGame();
                 break;
-           // case 2:
-           //     Manager.deleteDeveloper();
-           //     break;
+            case 2:
+               Manager.removeGameFromDev();
+                break;
             case 0:
                 return;
             default:

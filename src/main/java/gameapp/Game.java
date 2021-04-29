@@ -1,21 +1,20 @@
 package gameapp;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
+import java.util.ArrayList;
 
 
 @Entity
 public class Game {
 
+    static ArrayList<Integer> idBank = new ArrayList<>();
     @Id
     @GeneratedValue
     private int Id;
-    String name;
-    String price;
+    private String name;
+    private String price;
 
-    @OneToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     Developer dev;
 
 
@@ -63,8 +62,11 @@ public class Game {
 
     @Override
     public String toString() {
+        String end = "";
+        if(dev!=null) end = "Developer: " + dev.getDeveloperName();
         return "\nID: " + Id +
                 "\nName: " + name +
-                "\nPrice: " + price;
+                "\nPrice: " + price +
+                "\nDeveloper: " + end;
     }
 }

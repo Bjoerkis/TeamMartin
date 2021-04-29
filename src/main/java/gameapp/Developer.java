@@ -1,24 +1,39 @@
 package gameapp;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 public class Developer {
 
+    static ArrayList<Integer> idBank = new ArrayList<>();
     @Id
-    private int  companyID;
+    private int companyID;
     private String developerName;
     private String earnings;
 
-    public Developer(){
+    @OneToMany(cascade = {CascadeType.PERSIST}, fetch = FetchType.LAZY)
+    private List<Game> games = new ArrayList<>();
+
+    public Developer() {
 
     }
+
 
     public Developer(int companyID, String developerName, String earnings) {
         this.companyID = companyID;
         this.developerName = developerName;
         this.earnings = earnings;
+    }
+
+    public List<Game> getGames() {
+        return games;
+    }
+
+    public void setGames(List<Game> games) {
+        this.games = games;
     }
 
 
@@ -48,8 +63,13 @@ public class Developer {
 
     @Override
     public String toString() {
-        return  "\nCompanyID: " + companyID +
+        String end = "";
+        for (Game game : games) {
+            end += game.getName() + " ";
+        }
+        return "\nCompanyID: " + companyID +
                 "\nDeveloperName: " + developerName +
-                "\nEarnings: " + earnings;
+                "\nEarnings: " + earnings +
+                "\nGames: " + end;
     }
 }

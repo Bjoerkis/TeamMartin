@@ -58,23 +58,31 @@ public class Management {
         em.persist(game);
         em.getTransaction().commit();
         em.close();
+        addIDtoBank(game);
 
     }
 
+    private void addIDtoBank(Game game) {
+        Game.idBank.add(game.getId());
+    }
+
     public void newDeveloper() {
-
         EntityManager em = emf.createEntityManager();
-
-        double min = Math.ceil(1000);
-        double max = Math.floor(9999);
-
-        int developerID = (int) Math.round(Math.floor(Math.random() * (max - min) + min));
 
         System.out.print("Input Developer Name: ");
         String name = input.nextLine();
 
         System.out.print("Input Earnings: ");
         String earnings = input.nextLine();
+        int developerID = generateId();
+        while (true) {
+            if (Developer.idBank.contains(developerID)) {
+                developerID = generateId();
+            } else {
+                break;
+            }
+
+        }
 
         Developer d1 = new Developer(developerID, name, earnings);
 
@@ -87,11 +95,20 @@ public class Management {
 
     }
 
+    private int generateId() {
+
+        double min = Math.ceil(1000);
+        double max = Math.floor(9999);
+
+        int developerID = (int) Math.round(Math.floor(Math.random() * (max - min) + min));
+
+        return developerID;
+
+    }
+
     public void editGame() {
-        viewGames();
-        System.out.println();
-        System.out.println("Game ID: ");
-        int id = scanInt();
+        int id = inputGameId();
+
         EntityManager em = emf.createEntityManager();
         Game game = em.find(Game.class, id);
         System.out.println(game);
@@ -128,11 +145,7 @@ public class Management {
     }
 
     public void editDeveloper() {
-
-        viewDevelopers();
-        System.out.println();
-        System.out.println("Company Id: ");
-        int id = scanInt();
+        int id = inputDevId();
         EntityManager em = emf.createEntityManager();
         Developer dev = em.find(Developer.class, id);
         System.out.println(dev);
@@ -160,43 +173,80 @@ public class Management {
         em.getTransaction().commit();
         em.close();
 
-
     }
+
+    private int inputDevId() {
+        int id;
+        viewDevelopers();
+        while (true) {
+            System.out.print("\nCompanyID of developer: ");
+            id = scanInt();
+            if (Developer.idBank.contains(id)) {
+                break;
+            } else {
+                System.out.println("ID does not exist. Please try again\n");
+                viewDevelopers();
+            }
+        }
+        return id;
+    }
+
+    private int inputGameId() {
+        int id;
+        viewGames();
+        while (true) {
+            System.out.print("\nGame ID: ");
+            id = scanInt();
+            if (Game.idBank.contains(id)) {
+                break;
+            } else {
+                System.out.println("ID does not exist. Please try again\n");
+                viewGames();
+            }
+        }
+        return id;
+    }
+
 
     public void connectDevToGame() {
 
         EntityManager em = emf.createEntityManager();
-        viewAll();
         System.out.print("Enter the ID of the Game you'd like to connect: ");
-        int gameID = scanInt();
+        int gameID = inputGameId();
 
         Game game = em.find(Game.class, gameID);
 
         System.out.println("Enter the ID of the Developer you'd like to connect: ");
-        int devID = scanInt();
+        int devID = inputDevId();
 
         Developer dev = em.find(Developer.class, devID);
-        game.setDev(dev);
-
         em.getTransaction().begin();
-        em.persist(game);
+        game.setDev(dev);
+        dev.getGames().add(game);
         em.getTransaction().commit();
         em.close();
 
     }
 
-    public void deleteGame(){
-
+    public void deleteGame() {
         EntityManager em = emf.createEntityManager();
-        viewGames();
-        System.out.println("\n Enter id of game: ");
-        int id = scanInt();
-        Game game = em.find(Game.class,id);
+        int id = inputGameId();
+        Game game = em.find(Game.class, id);
         em.getTransaction().begin();
+
+        Query all = em.createQuery("SELECT d FROM Developer d");
+        List<Developer> allDevs = all.getResultList();
+        for (Developer dev : allDevs) {
+
+            final Game[] z = new Game[1];
+            dev.getGames().stream().filter(x -> x.getId() == id).forEach(x -> z[0] = x);
+            dev.getGames().remove(z[0]);
+
+        }
+
         em.remove(game);
         em.getTransaction().commit();
         em.close();
-
 
 
     }
@@ -217,5 +267,18 @@ public class Management {
         }
         input.nextLine();
         return scanned;
+    }
+
+    public void removeGameFromDev() {
+        EntityManager em = emf.createEntityManager();
+        Developer dev = em.find(Developer.class,inputDevId());
+        Game game = em.find(Game.class,inputGameId());
+        dev.getGames().remove(game);
+        game.setDev(null);
+        em.getTransaction().begin();
+        em.merge(dev);
+        em.getTransaction().commit();
+        em.close();
+
     }
 }
