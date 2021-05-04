@@ -67,6 +67,7 @@ public class Management {
     }
 
     public void newDeveloper() {
+
         EntityManager em = emf.createEntityManager();
 
         System.out.print("Input Developer Name: ");
@@ -83,7 +84,7 @@ public class Management {
             }
 
         }
-
+        Developer.idBank.add(developerID);
         Developer d1 = new Developer(developerID, name, earnings);
 
         em.getTransaction().begin();
@@ -122,24 +123,22 @@ public class Management {
             System.out.println("\nEnter new name: ");
             String name = input.nextLine();
             game.setName(name);
-            em.getTransaction().begin();
-            em.persist(game);
-            em.getTransaction().commit();
-            em.close();
 
         } else if (choice == 2) {
 
             System.out.println("Enter new price: ");
             String price = input.nextLine();
             game.setPrice(price);
-            em.getTransaction().begin();
-            em.persist(game);
-            em.getTransaction().commit();
-            em.close();
+
 
         } else {
             return;
         }
+
+        em.getTransaction().begin();
+        em.persist(game);
+        em.getTransaction().commit();
+        em.close();
 
 
     }
@@ -176,6 +175,12 @@ public class Management {
     }
 
     private int inputDevId() {
+
+        if (Developer.idBank.size() == 0) {
+            System.out.println("No developers available");
+            return 0;
+        }
+
         int id;
         viewDevelopers();
         while (true) {
@@ -192,6 +197,10 @@ public class Management {
     }
 
     private int inputGameId() {
+        if (Game.idBank.size() == 0) {
+            System.out.println("No games available");
+            return 0;
+        }
         int id;
         viewGames();
         while (true) {
@@ -214,14 +223,18 @@ public class Management {
         System.out.print("Enter the ID of the Game you'd like to connect: ");
         int gameID = inputGameId();
 
-        Game game = em.find(Game.class, gameID);
 
         System.out.println("Enter the ID of the Developer you'd like to connect: ");
         int devID = inputDevId();
 
+        if (gameID == 0 || devID == 0) {
+            System.out.println("Developer or game not found. Returning to main");
+            return;
+        }
+        Game game = em.find(Game.class, gameID);
         Developer dev = em.find(Developer.class, devID);
         em.getTransaction().begin();
-        game.setDev(dev);
+        game.getDev().add(dev);
         dev.getGames().add(game);
         em.getTransaction().commit();
         em.close();
@@ -271,11 +284,25 @@ public class Management {
 
     public void removeGameFromDev() {
         EntityManager em = emf.createEntityManager();
-        Developer dev = em.find(Developer.class,inputDevId());
-        Game game = em.find(Game.class,inputGameId());
+        Developer dev = em.find(Developer.class, inputDevId());
+        Game game = null;
+        if (dev.getGames().size() > 0) {
+            while (true) {
+                game = em.find(Game.class, inputGameId());
+                if (game.getDev().contains(dev)) break;
+                else {
+                    System.out.println("Game is not made by selected developer. Please try again.");
+                }
+            }
+
+        } else {
+            System.out.println("Developer does not have any registered games. Returning to main menu");
+            return;
+        }
+        game.getDev().remove(dev);
         dev.getGames().remove(game);
-        game.setDev(null);
         em.getTransaction().begin();
+        em.merge(game);
         em.merge(dev);
         em.getTransaction().commit();
         em.close();

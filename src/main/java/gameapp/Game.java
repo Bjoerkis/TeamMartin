@@ -2,6 +2,7 @@ package gameapp;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.List;
 
 
 @Entity
@@ -14,8 +15,18 @@ public class Game {
     private String name;
     private String price;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
-    Developer dev;
+
+    public List<Developer> getDev() {
+        return dev;
+    }
+
+    public void setDev(List<Developer> dev) {
+        this.dev = dev;
+    }
+
+    @ManyToMany(cascade = CascadeType.PERSIST,mappedBy = "games")
+    private List<Developer> dev = new ArrayList<>();
+
 
 
     public Game() {
@@ -26,13 +37,7 @@ public class Game {
         this.price = price;
     }
 
-    public Developer getDev() {
-        return dev;
-    }
 
-    public void setDev(Developer developer) {
-        this.dev = developer;
-    }
 
     public String getName() {
         return name;
@@ -62,11 +67,16 @@ public class Game {
 
     @Override
     public String toString() {
-        String end = "";
-        if(dev!=null) end = "Developer: " + dev.getDeveloperName();
+        String end = "Developer: ";
+        if(dev.size()!=0){
+            for(int x=0; x<dev.size(); x++){
+                Developer devs = dev.get(x);
+                end+=devs.getDeveloperName() + ", ";
+            }
+        }
         return "\nID: " + Id +
                 "\nName: " + name +
                 "\nPrice: " + price +
-                "\nDeveloper: " + end;
+                "\n" + end;
     }
 }
